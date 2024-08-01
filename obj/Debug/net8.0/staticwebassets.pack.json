@@ -1,0 +1,81 @@
+{
+  "Files": [
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output.m3u8",
+      "PackagePath": "staticwebassets\\hls\\output.m3u8"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output100.ts",
+      "PackagePath": "staticwebassets\\hls\\output100.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output101.ts",
+      "PackagePath": "staticwebassets\\hls\\output101.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output107.ts",
+      "PackagePath": "staticwebassets\\hls\\output107.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output108.ts",
+      "PackagePath": "staticwebassets\\hls\\output108.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output109.ts",
+      "PackagePath": "staticwebassets\\hls\\output109.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output110.ts",
+      "PackagePath": "staticwebassets\\hls\\output110.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output111.ts",
+      "PackagePath": "staticwebassets\\hls\\output111.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output112.ts",
+      "PackagePath": "staticwebassets\\hls\\output112.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output113.ts",
+      "PackagePath": "staticwebassets\\hls\\output113.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output95.ts",
+      "PackagePath": "staticwebassets\\hls\\output95.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output96.ts",
+      "PackagePath": "staticwebassets\\hls\\output96.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output97.ts",
+      "PackagePath": "staticwebassets\\hls\\output97.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output98.ts",
+      "PackagePath": "staticwebassets\\hls\\output98.ts"
+    },
+    {
+      "Id": "E:\\Ngay317\\CameraStreamingApi\\wwwroot\\hls\\output99.ts",
+      "PackagePath": "staticwebassets\\hls\\output99.ts"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.CameraStreamingApi.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.CameraStreamingApi.props",
+      "PackagePath": "build\\CameraStreamingApi.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.CameraStreamingApi.props",
+      "PackagePath": "buildMultiTargeting\\CameraStreamingApi.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.CameraStreamingApi.props",
+      "PackagePath": "buildTransitive\\CameraStreamingApi.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
