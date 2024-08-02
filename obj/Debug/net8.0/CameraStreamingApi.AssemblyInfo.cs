@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CameraStreamingApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+86fbb5b43865e3711ead8a44371a30ee6d714fe5")]
 [assembly: System.Reflection.AssemblyProductAttribute("CameraStreamingApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CameraStreamingApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

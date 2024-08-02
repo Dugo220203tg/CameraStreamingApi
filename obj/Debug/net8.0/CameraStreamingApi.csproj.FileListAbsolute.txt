@@ -33,3 +33,4 @@ E:\Ngay317\CameraStreamingApi\obj\Debug\net8.0\CameraStreamingApi.pdb
 E:\Ngay317\CameraStreamingApi\obj\Debug\net8.0\CameraStreamingApi.genruntimeconfig.cache
 E:\Ngay317\CameraStreamingApi\obj\Debug\net8.0\ref\CameraStreamingApi.dll
 E:\Ngay317\CameraStreamingApi\bin\Debug\net8.0\CameraStreamingApi.staticwebassets.runtime.json
+E:\Ngay317\CameraStreamingApi\obj\Debug\net8.0\CameraStreamingApi.sourcelink.json

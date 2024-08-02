@@ -3,9 +3,24 @@ using System.Text;
 
 public class RtspService
 {
-    public async Task<string> ConvertRtspToHlsAsync(string rtspUrl, string outputPath)
+    private Process? _process;
+    private readonly IConfiguration _configuration;
+
+    public RtspService(IConfiguration configuration)
     {
-        string outputUrl = Path.Combine(outputPath, "output.m3u8");
+        _configuration = configuration;
+    }
+
+    public void StartRtspToHls(string rtspUrl)
+    {
+        var outputPath = Path.Combine(_configuration["WebRootPath"], "hls");
+        Console.WriteLine($"Output path: {outputPath}");
+
+        if (!Directory.Exists(outputPath))
+        {
+            Directory.CreateDirectory(outputPath);
+        }
+        var outputUrl = Path.Combine(outputPath, "output.m3u8");
 
         var processStartInfo = new ProcessStartInfo
         {
@@ -17,28 +32,18 @@ public class RtspService
             CreateNoWindow = true,
         };
 
-        using var process = new Process { StartInfo = processStartInfo };
-
+        _process = new Process { StartInfo = processStartInfo };
         var errorOutput = new StringBuilder();
+        _process.ErrorDataReceived += (sender, args) => errorOutput.AppendLine(args.Data);
+        _process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data); // Log standard output
+        _process.ErrorDataReceived += (sender, args) => Console.WriteLine(args.Data); // Log error output
 
-        process.ErrorDataReceived += (sender, args) => errorOutput.AppendLine(args.Data);
+        _process.Start();
+        _process.BeginErrorReadLine();
+        _process.BeginOutputReadLine(); // Start reading standard output
 
-        process.Start();
-        process.BeginErrorReadLine();
-        await process.WaitForExitAsync();
-
-        if (process.ExitCode != 0)
-        {
-            throw new Exception($"FFmpeg process failed with exit code {process.ExitCode}: {errorOutput}");
-        }
-
-        if (File.Exists(outputUrl))
-        {
-            return outputUrl;
-        }
-        else
-        {
-            throw new Exception("HLS file not created");
-        }
+        // Do not wait for the process to exit
     }
+
+    // ... (rest of the class remains the same)
 }

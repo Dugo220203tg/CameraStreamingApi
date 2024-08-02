@@ -1,5 +1,5 @@
-﻿using Microsoft.OpenApi.Models;
-using Microsoft.Extensions.FileProviders;
+﻿using Microsoft.Extensions.FileProviders;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngularApp",
         builder =>
         {
-            builder.WithOrigins("http://localhost:4200") // URL của ứng dụng Angular
+            builder.WithOrigins("http://localhost:4200")
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });
@@ -27,14 +27,13 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Ensure the web root and hls directories exist
-var webRoot = "E:\\Ngay317\\CameraStreamingApi\\wwwroot";
+var webRoot = builder.Configuration["WebRootPath"] ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+Console.WriteLine($"WebRoot path: {webRoot}");
 var hlsDirectory = Path.Combine(webRoot, "hls");
-
 if (!Directory.Exists(webRoot))
 {
     Directory.CreateDirectory(webRoot);
 }
-
 if (!Directory.Exists(hlsDirectory))
 {
     Directory.CreateDirectory(hlsDirectory);
@@ -48,21 +47,18 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseCors("AllowAll");
+app.UseCors("AllowAngularApp");
 
 // Serve static files from the specified directory
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")),
-    RequestPath = ""
+    FileProvider = new PhysicalFileProvider(webRoot),
+    RequestPath = "",
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/x-mpegURL"
 });
 
 app.UseRouting();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

@@ -1,38 +1,41 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
-namespace CameraStreamingApi.Controller
+namespace CameraStreamingApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class StreamController : ControllerBase
     {
         private readonly RtspService _rtspService;
+        private readonly IConfiguration _configuration;
 
-        public StreamController(RtspService rtspService)
+        public StreamController(RtspService rtspService, IConfiguration configuration)
         {
             _rtspService = rtspService;
+            _configuration = configuration;
         }
 
         [HttpGet("camera")]
-        public async Task<IActionResult> GetCameraStream()
+        public IActionResult GetCameraStream()
         {
-            string rtspUrl = "rtsp://itsvn:Itsvn@123@14.224.129.98:554/Streaming/Channels/101?transportmode=unicast&profile=Profile_1";
-            string outputPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "hls");
+            string rtspUrl = _configuration["RtspSettings:Url"];
+            _rtspService.StartRtspToHls(rtspUrl);
 
-            if (!Directory.Exists(outputPath))
-            {
-                Directory.CreateDirectory(outputPath);
-            }
+            string baseUrl = $"{Request.Scheme}://{Request.Host}";
+            string streamUrl = $"/hls/output.m3u8";
 
-            try
+            return Ok(new { streamUrl });
+        }
+        [HttpGet("check")]
+        public IActionResult CheckFile()
+        {
+            string filePath = Path.Combine(_configuration["WebRootPath"], "hls", "output.m3u8");
+            if (System.IO.File.Exists(filePath))
             {
-                string hlsUrl = await _rtspService.ConvertRtspToHlsAsync(rtspUrl, outputPath);
-                return Ok(new { streamUrl = $"/hls/{Path.GetFileName(hlsUrl)}" });
+                return Ok($"File exists at {filePath}");
             }
-            catch (Exception ex)
-            {
-                return Problem($"Error converting RTSP to HLS: {ex.Message}");
-            }
+            return NotFound($"File not found at {filePath}");
         }
     }
 }
