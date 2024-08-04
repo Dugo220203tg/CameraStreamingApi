@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -9,21 +10,25 @@ namespace CameraStreamingApi.Service
     {
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
-        private double _currentPan = 0; // Trạng thái hiện tại của pan
-        private double _currentTilt = 0; // Trạng thái hiện tại của tilt
-        private double _currentZoom = 0; // Trạng thái hiện tại của zoom
+        private double _currentPan = 0; // Current pan state
+        private double _currentTilt = 0; // Current tilt state
+        private double _currentZoom = 1; // Current zoom state, initialized to a valid value
 
-        private readonly double _panStep = 350; // Bước di chuyển pan (độ)
-        private readonly double _tiltStep = 350; // Bước di chuyển tilt (độ)
-        private readonly double _zoomStep = 0.5; // Bước di chuyển zoom
+        private readonly double _panStep = 350; // Pan step (degrees)
+        private readonly double _tiltStep = 350; // Tilt step (degrees)
+        private readonly double _zoomStep = 1; // Zoom step
 
         public CameraControlService(IConfiguration configuration)
         {
-            _configuration = configuration;
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _httpClient = new HttpClient();
-            string username = _configuration["CameraSettings:Username"];
-            string password = _configuration["CameraSettings:Password"];
-            string authString = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{username}:{password}"));
+
+            string username = _configuration["CameraSettings:Username"]
+                ?? throw new ArgumentException("CameraSettings:Username is not configured.");
+            string password = _configuration["CameraSettings:Password"]
+                ?? throw new ArgumentException("CameraSettings:Password is not configured.");
+
+            string authString = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{username}:{password}"));
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authString);
         }
 
@@ -31,21 +36,26 @@ namespace CameraStreamingApi.Service
         {
             UpdatePtzState(direction);
 
-            string cameraIp = _configuration["CameraSettings:IpAddress"];
+            string cameraIp = _configuration["CameraSettings:IpAddress"]
+                ?? throw new ArgumentException("CameraSettings:IpAddress is not configured.");
             string url = $"http://{cameraIp}/ISAPI/PTZCtrl/channels/1/continuous";
             string xmlBody = GetPtzXml();
 
-            var content = new StringContent(xmlBody, System.Text.Encoding.UTF8, "application/xml");
+            Console.WriteLine($"MoveCamera Request URL: {url}");
+            Console.WriteLine($"MoveCamera Request XML: {xmlBody}");
+
+            var content = new StringContent(xmlBody, Encoding.UTF8, "application/xml");
             var response = await _httpClient.PutAsync(url, content);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"MoveCamera Response. Status code: {response.StatusCode}, Response: {responseContent}");
 
             if (response.IsSuccessStatusCode)
             {
-                // Gửi lệnh dừng sau lệnh di chuyển
                 await StopCamera();
             }
             else
             {
-                var responseContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Failed to move camera. Status code: {response.StatusCode}, Response: {responseContent}");
             }
 
@@ -72,98 +82,69 @@ namespace CameraStreamingApi.Service
                     <tilt>{_currentTilt}</tilt>
                 </PTZData>";
         }
+
         public async Task<bool> Zoom(string operation)
         {
-            string cameraIp = _configuration["CameraSettings:IpAddress"];
-            string url = $"http://{cameraIp}/ISAPI/PTZCtrl/channels/1/continuous";
-            string xmlBody = GetZoomXml(operation);
+            UpdateZoomState(operation);
 
-            var content = new StringContent(xmlBody, System.Text.Encoding.UTF8, "application/xml");
+            string cameraIp = _configuration["CameraSettings:IpAddress"]
+                ?? throw new ArgumentException("CameraSettings:IpAddress is not configured.");
+            string url = $"http://{cameraIp}/ISAPI/PTZCtrl/channels/1/continuous";
+            string xmlBody = GetZoomXml();
+
+            Console.WriteLine($"Zoom Request URL: {url}");
+            Console.WriteLine($"Zoom Request XML: {xmlBody}");
+
+            var content = new StringContent(xmlBody, Encoding.UTF8, "application/xml");
             var response = await _httpClient.PutAsync(url, content);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Zoom Response. Status code: {response.StatusCode}, Response: {responseContent}");
 
             if (response.IsSuccessStatusCode)
             {
-                // Gửi lệnh dừng sau lệnh zoom
+                // Đợi một khoảng thời gian ngắn để zoom có hiệu lực
+                await Task.Delay(500);
                 await StopCamera();
             }
             else
             {
-                var responseContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Failed to zoom camera. Status code: {response.StatusCode}, Response: {responseContent}");
             }
 
             return response.IsSuccessStatusCode;
         }
 
-        private string GetZoomXml(string operation)
+        private void UpdateZoomState(string operation)
         {
-            int zoom = operation.ToLower() == "in" ? 1 : -1;
-
-            return $@"
-                <?xml version=""1.0"" encoding=""UTF-8""?>
-                <PTZData>
-                    <zoom>{zoom}</zoom>
-                </PTZData>";
+            if (string.Equals(operation, "in", StringComparison.OrdinalIgnoreCase))
+            {
+                _currentZoom = Math.Min(_currentZoom + _zoomStep, 25);
+            }
+            else if (string.Equals(operation, "out", StringComparison.OrdinalIgnoreCase))
+            {
+                _currentZoom = Math.Max(_currentZoom - _zoomStep, 1);
+            }
         }
 
-        //public async Task<bool> Zoom(string operation)
-        //{
-        //    UpdateZoomState(operation);
+        private string GetZoomXml()
+        {
+            int zoomSpeed = (_currentZoom > 1) ? 50 : -50; // Positive for zoom in, negative for zoom out
 
-        //    string cameraIp = _configuration["CameraSettings:IpAddress"];
-        //    string url = $"http://{cameraIp}/ISAPI/PTZCtrl/channels/1/continuous"; // Đảm bảo endpoint chính xác
-        //    string xmlBody = GetZoomXml();
-
-        //    var content = new StringContent(xmlBody, System.Text.Encoding.UTF8, "application/xml");
-        //    var response = await _httpClient.PutAsync(url, content);
-
-        //    if (response.IsSuccessStatusCode)
-        //    {
-        //        // Gửi lệnh dừng sau lệnh zoom
-        //        await StopCamera();
-        //    }
-        //    else
-        //    {
-        //        var responseContent = await response.Content.ReadAsStringAsync();
-        //        Console.WriteLine($"Failed to zoom camera. Status code: {response.StatusCode}, Response: {responseContent}");
-        //    }
-
-        //    return response.IsSuccessStatusCode;
-        //}
-
-
-        //private void UpdateZoomState(string operation)
-        //{
-        //    if (operation.ToLower() == "in")
-        //    {
-        //        _currentZoom += _zoomStep;
-        //    }
-        //    else if (operation.ToLower() == "out")
-        //    {
-        //        _currentZoom -= _zoomStep;
-        //    }
-
-        //    // Đảm bảo giá trị zoom nằm trong phạm vi hợp lệ (ví dụ: 1 đến 25)
-        //    _currentZoom = Math.Max(1, Math.Min(_currentZoom, 25));
-        //}
-
-
-        //private string GetZoomXml()
-        //{
-        //    return $@"
-        //<?xml version=""1.0"" encoding=""UTF-8""?>
-        //<PTZData>
-        //    <zoom>
-        //        <value>{_currentZoom}</value>
-        //    </zoom>
-        //</PTZData>";
-        //}
-
+            return $@"
+        <?xml version=""1.0"" encoding=""UTF-8""?>
+        <PTZData>
+            <pan>0</pan>
+            <tilt>0</tilt>
+            <zoom>{zoomSpeed}</zoom>
+        </PTZData>";
+        }
 
         public async Task<bool> StopCamera()
         {
-            string cameraIp = _configuration["CameraSettings:IpAddress"];
-            string url = $"http://{cameraIp}/ISAPI/PTZCtrl/channels/1/continuous";  // Thay đổi URL nếu cần
+            string cameraIp = _configuration["CameraSettings:IpAddress"]
+                ?? throw new ArgumentException("CameraSettings:IpAddress is not configured.");
+            string url = $"http://{cameraIp}/ISAPI/PTZCtrl/channels/1/continuous";
             string xmlBody = @"
                 <?xml version=""1.0"" encoding=""UTF-8""?>
                 <PTZData>
@@ -172,11 +153,14 @@ namespace CameraStreamingApi.Service
                     <zoom>0</zoom>
                 </PTZData>";
 
-            var content = new StringContent(xmlBody, System.Text.Encoding.UTF8, "application/xml");
+            Console.WriteLine($"StopCamera Request URL: {url}");
+            Console.WriteLine($"StopCamera Request XML: {xmlBody}");
+
+            var content = new StringContent(xmlBody, Encoding.UTF8, "application/xml");
             var response = await _httpClient.PutAsync(url, content);
 
             var responseContent = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Stop camera response. Status code: {response.StatusCode}, Response: {responseContent}");
+            Console.WriteLine($"StopCamera Response. Status code: {response.StatusCode}, Response: {responseContent}");
 
             return response.IsSuccessStatusCode;
         }
